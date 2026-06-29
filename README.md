@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/hero.svg" alt="log" width="880"></p>
+
 # Hanzo Log
 
 A high-performance, zero-allocation structured logging library for the Hanzo ecosystem. Based on [zerolog](https://github.com/rs/zerolog) with additional geth-style API support.
