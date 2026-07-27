@@ -1,6 +1,6 @@
 module github.com/hanzoai/log
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/mattn/go-colorable v0.1.14
