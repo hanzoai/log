@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"math"
 	"math/big"
 	"os"
@@ -81,16 +82,16 @@ var spaces = []byte("                                        ")
 
 // SlogLogger is a Logger interface that wraps slog for geth compatibility.
 type SlogLogger interface {
-	With(ctx ...interface{}) SlogLogger
-	New(ctx ...interface{}) SlogLogger
-	Log(level slog.Level, msg string, ctx ...interface{})
-	Trace(msg string, ctx ...interface{})
-	Debug(msg string, ctx ...interface{})
-	Info(msg string, ctx ...interface{})
-	Warn(msg string, ctx ...interface{})
-	Error(msg string, ctx ...interface{})
-	Crit(msg string, ctx ...interface{})
-	Write(level slog.Level, msg string, attrs ...interface{})
+	With(ctx ...any) SlogLogger
+	New(ctx ...any) SlogLogger
+	Log(level slog.Level, msg string, ctx ...any)
+	Trace(msg string, ctx ...any)
+	Debug(msg string, ctx ...any)
+	Info(msg string, ctx ...any)
+	Warn(msg string, ctx ...any)
+	Error(msg string, ctx ...any)
+	Crit(msg string, ctx ...any)
+	Write(level slog.Level, msg string, attrs ...any)
 	Enabled(ctx context.Context, level slog.Level) bool
 	Handler() slog.Handler
 }
@@ -128,7 +129,7 @@ func NewLoggerFromHandler(h slog.Handler) SlogLogger {
 	return &slogLogger{inner: slog.New(h)}
 }
 
-func (l *slogLogger) Write(level slog.Level, msg string, attrs ...interface{}) {
+func (l *slogLogger) Write(level slog.Level, msg string, attrs ...any) {
 	if !l.inner.Enabled(context.Background(), level) {
 		return
 	}
@@ -142,15 +143,15 @@ func (l *slogLogger) Write(level slog.Level, msg string, attrs ...interface{}) {
 	_ = l.inner.Handler().Handle(context.Background(), r)
 }
 
-func (l *slogLogger) Log(level slog.Level, msg string, attrs ...interface{}) {
+func (l *slogLogger) Log(level slog.Level, msg string, attrs ...any) {
 	l.Write(level, msg, attrs...)
 }
 
-func (l *slogLogger) With(ctx ...interface{}) SlogLogger {
+func (l *slogLogger) With(ctx ...any) SlogLogger {
 	return &slogLogger{l.inner.With(ctx...)}
 }
 
-func (l *slogLogger) New(ctx ...interface{}) SlogLogger {
+func (l *slogLogger) New(ctx ...any) SlogLogger {
 	return l.With(ctx...)
 }
 
@@ -158,27 +159,27 @@ func (l *slogLogger) Enabled(ctx context.Context, level slog.Level) bool {
 	return l.inner.Enabled(ctx, level)
 }
 
-func (l *slogLogger) Trace(msg string, ctx ...interface{}) {
+func (l *slogLogger) Trace(msg string, ctx ...any) {
 	l.Write(slogLevelTrace, msg, ctx...)
 }
 
-func (l *slogLogger) Debug(msg string, ctx ...interface{}) {
+func (l *slogLogger) Debug(msg string, ctx ...any) {
 	l.Write(slog.LevelDebug, msg, ctx...)
 }
 
-func (l *slogLogger) Info(msg string, ctx ...interface{}) {
+func (l *slogLogger) Info(msg string, ctx ...any) {
 	l.Write(slog.LevelInfo, msg, ctx...)
 }
 
-func (l *slogLogger) Warn(msg string, ctx ...interface{}) {
+func (l *slogLogger) Warn(msg string, ctx ...any) {
 	l.Write(slog.LevelWarn, msg, ctx...)
 }
 
-func (l *slogLogger) Error(msg string, ctx ...interface{}) {
+func (l *slogLogger) Error(msg string, ctx ...any) {
 	l.Write(slog.LevelError, msg, ctx...)
 }
 
-func (l *slogLogger) Crit(msg string, ctx ...interface{}) {
+func (l *slogLogger) Crit(msg string, ctx ...any) {
 	l.Write(slogLevelCrit, msg, ctx...)
 	os.Exit(1)
 }
@@ -306,7 +307,7 @@ func (h *GlogHandler) Vmodule(pattern string) error {
 		return nil
 	}
 
-	for _, rule := range strings.Split(pattern, ",") {
+	for rule := range strings.SplitSeq(pattern, ",") {
 		parts := strings.Split(rule, "=")
 		if len(parts) != 2 {
 			continue
@@ -375,13 +376,9 @@ func (h *GlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	h.mu.RLock()
 	verbosity := h.verbosity
 	vmodule := make(map[string]slog.Level, len(h.vmodule))
-	for k, v := range h.vmodule {
-		vmodule[k] = v
-	}
+	maps.Copy(vmodule, h.vmodule)
 	patternCache := make(map[string]*regexp.Regexp, len(h.patternCache))
-	for k, v := range h.patternCache {
-		patternCache[k] = v
-	}
+	maps.Copy(patternCache, h.patternCache)
 	h.mu.RUnlock()
 
 	return &GlogHandler{
@@ -396,13 +393,9 @@ func (h *GlogHandler) WithGroup(name string) slog.Handler {
 	h.mu.RLock()
 	verbosity := h.verbosity
 	vmodule := make(map[string]slog.Level, len(h.vmodule))
-	for k, v := range h.vmodule {
-		vmodule[k] = v
-	}
+	maps.Copy(vmodule, h.vmodule)
 	patternCache := make(map[string]*regexp.Regexp, len(h.patternCache))
-	for k, v := range h.patternCache {
-		patternCache[k] = v
-	}
+	maps.Copy(patternCache, h.patternCache)
 	h.mu.RUnlock()
 
 	return &GlogHandler{
@@ -586,7 +579,7 @@ func FormatSlogValue(v slog.Value, tmp []byte) (result []byte) {
 	var value any
 	defer func() {
 		if err := recover(); err != nil {
-			if v := reflect.ValueOf(value); v.Kind() == reflect.Ptr && v.IsNil() {
+			if v := reflect.ValueOf(value); v.Kind() == reflect.Pointer && v.IsNil() {
 				result = []byte("<nil>")
 			} else {
 				panic(err)

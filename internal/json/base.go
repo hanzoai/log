@@ -6,7 +6,7 @@ package json
 // of Encoder being invoked.
 // DO REMEMBER to set this variable at importing, or
 // you might get a nil pointer dereference panic at runtime.
-var JSONMarshalFunc func(v interface{}) ([]byte, error)
+var JSONMarshalFunc func(v any) ([]byte, error)
 
 type Encoder struct{}
 

@@ -19,7 +19,7 @@ var (
 
 func init() {
 	// using closure to reflect the changes at runtime.
-	json.JSONMarshalFunc = func(v interface{}) ([]byte, error) {
+	json.JSONMarshalFunc = func(v any) ([]byte, error) {
 		return InterfaceMarshalFunc(v)
 	}
 }
@@ -33,7 +33,7 @@ func appendCBOR(dst []byte, cbor []byte) []byte {
 	l := len(dst)
 	enc := base64.StdEncoding
 	n := enc.EncodedLen(len(cbor))
-	for i := 0; i < n; i++ {
+	for range n {
 		dst = append(dst, '.')
 	}
 	enc.Encode(dst[l:], cbor)

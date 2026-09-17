@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -34,7 +35,7 @@ const (
 
 var (
 	consoleBufPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return bytes.NewBuffer(make([]byte, 0, 100))
 		},
 	}
@@ -45,11 +46,11 @@ const (
 )
 
 // Formatter transforms the input into a formatted string.
-type Formatter func(interface{}) string
+type Formatter func(any) string
 
 // FormatterByFieldName transforms the input into a formatted string,
 // being able to differentiate formatting based on field name.
-type FormatterByFieldName func(interface{}, string) string
+type FormatterByFieldName func(any, string) string
 
 // ConsoleWriter parses the JSON input and writes it in an
 // (optionally) colorized, human-friendly format to Out.
@@ -93,9 +94,9 @@ type ConsoleWriter struct {
 	// has precedence on FormatFieldValue
 	FormatPartValueByName FormatterByFieldName
 
-	FormatExtra func(map[string]interface{}, *bytes.Buffer) error
+	FormatExtra func(map[string]any, *bytes.Buffer) error
 
-	FormatPrepare func(map[string]interface{}) error
+	FormatPrepare func(map[string]any) error
 }
 
 // NewConsoleWriter creates and initializes a new ConsoleWriter.
@@ -132,7 +133,7 @@ func (w ConsoleWriter) Write(p []byte) (n int, err error) {
 		consoleBufPool.Put(buf)
 	}()
 
-	var evt map[string]interface{}
+	var evt map[string]any
 	p = decodeIfBinaryToBytes(p)
 	d := json.NewDecoder(bytes.NewReader(p))
 	d.UseNumber()
@@ -180,17 +181,10 @@ func (w ConsoleWriter) Close() error {
 }
 
 // writeFields appends formatted key-value pairs to buf.
-func (w ConsoleWriter) writeFields(evt map[string]interface{}, buf *bytes.Buffer) {
+func (w ConsoleWriter) writeFields(evt map[string]any, buf *bytes.Buffer) {
 	var fields = make([]string, 0, len(evt))
 	for field := range evt {
-		var isExcluded bool
-		for _, excluded := range w.FieldsExclude {
-			if field == excluded {
-				isExcluded = true
-				break
-			}
-		}
-		if isExcluded {
+		if slices.Contains(w.FieldsExclude, field) {
 			continue
 		}
 
@@ -284,16 +278,12 @@ func (w ConsoleWriter) writeFields(evt map[string]interface{}, buf *bytes.Buffer
 }
 
 // writePart appends a formatted part to buf.
-func (w ConsoleWriter) writePart(buf *bytes.Buffer, evt map[string]interface{}, p string) {
+func (w ConsoleWriter) writePart(buf *bytes.Buffer, evt map[string]any, p string) {
 	var f Formatter
 	var fvn FormatterByFieldName
 
-	if len(w.PartsExclude) > 0 {
-		for _, exclude := range w.PartsExclude {
-			if exclude == p {
-				return
-			}
-		}
+	if slices.Contains(w.PartsExclude, p) {
+		return
 	}
 
 	switch p {
@@ -383,7 +373,7 @@ func needsQuote(s string) bool {
 }
 
 // colorize returns the string s wrapped in ANSI code c, unless disabled is true or c is 0.
-func colorize(s interface{}, c int, disabled bool) string {
+func colorize(s any, c int, disabled bool) string {
 	e := os.Getenv("NO_COLOR")
 	if e != "" || c == 0 {
 		disabled = true
@@ -414,7 +404,7 @@ func consoleDefaultFormatTimestamp(timeFormat string, location *time.Location, n
 		location = time.Local
 	}
 
-	return func(i interface{}) string {
+	return func(i any) string {
 		t := "<nil>"
 		switch tt := i.(type) {
 		case string:
@@ -461,7 +451,7 @@ func stripLevel(ll string) string {
 }
 
 func consoleDefaultFormatLevel(noColor bool) Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		if ll, ok := i.(string); ok {
 			level, _ := ParseLevel(ll)
 			fl, ok := FormattedLevels[level]
@@ -478,7 +468,7 @@ func consoleDefaultFormatLevel(noColor bool) Formatter {
 }
 
 func consoleDefaultFormatCaller(noColor bool) Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		var c string
 		if cc, ok := i.(string); ok {
 			c = cc
@@ -495,8 +485,8 @@ func consoleDefaultFormatCaller(noColor bool) Formatter {
 	}
 }
 
-func consoleDefaultFormatMessage(noColor bool, level interface{}) Formatter {
-	return func(i interface{}) string {
+func consoleDefaultFormatMessage(noColor bool, level any) Formatter {
+	return func(i any) string {
 		if i == nil || i == "" {
 			return ""
 		}
@@ -510,23 +500,23 @@ func consoleDefaultFormatMessage(noColor bool, level interface{}) Formatter {
 }
 
 func consoleDefaultFormatFieldName(noColor bool) Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		return colorize(fmt.Sprintf("%s=", i), colorCyan, noColor)
 	}
 }
 
-func consoleDefaultFormatFieldValue(i interface{}) string {
+func consoleDefaultFormatFieldValue(i any) string {
 	return fmt.Sprintf("%s", i)
 }
 
 func consoleDefaultFormatErrFieldName(noColor bool) Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		return colorize(fmt.Sprintf("%s=", i), colorCyan, noColor)
 	}
 }
 
 func consoleDefaultFormatErrFieldValue(noColor bool) Formatter {
-	return func(i interface{}) string {
+	return func(i any) string {
 		return colorize(colorize(fmt.Sprintf("%s", i), colorBold, noColor), colorRed, noColor)
 	}
 }

@@ -138,8 +138,8 @@ func MultiLevelWriter(writers ...io.Writer) LevelWriter {
 
 // TestingLog is the logging interface of testing.TB.
 type TestingLog interface {
-	Log(args ...interface{})
-	Logf(format string, args ...interface{})
+	Log(args ...any)
+	Logf(format string, args ...any)
 	Helper()
 }
 
@@ -223,7 +223,7 @@ func (w *FilteredLevelWriter) Close() error {
 }
 
 var triggerWriterPool = &sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return bytes.NewBuffer(make([]byte, 0, 1024))
 	},
 }

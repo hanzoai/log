@@ -21,7 +21,7 @@ func (c Context) Logger() Logger {
 // Fields is a helper function to use a map or slice to set fields using type assertion.
 // Only map[string]interface{} and []interface{} are accepted. []interface{} must
 // alternate string keys and arbitrary values, and extraneous ones are ignored.
-func (c Context) Fields(fields interface{}) Context {
+func (c Context) Fields(fields any) Context {
 	c.l.context = appendFields(c.l.context, fields, c.l.stack, c.l.ctx, c.l.hooks)
 	return c
 }
@@ -407,7 +407,7 @@ func (c Context) Durs(key string, d []time.Duration) Context {
 }
 
 // Interface adds the field key with obj marshaled using reflection.
-func (c Context) Interface(key string, i interface{}) Context {
+func (c Context) Interface(key string, i any) Context {
 	if obj, ok := i.(LogObjectMarshaler); ok {
 		return c.Object(key, obj)
 	}
@@ -416,13 +416,13 @@ func (c Context) Interface(key string, i interface{}) Context {
 }
 
 // Type adds the field key with val's type using reflection.
-func (c Context) Type(key string, val interface{}) Context {
+func (c Context) Type(key string, val any) Context {
 	c.l.context = enc.AppendType(enc.AppendKey(c.l.context, key), val)
 	return c
 }
 
 // Any is a wrapper around Context.Interface.
-func (c Context) Any(key string, i interface{}) Context {
+func (c Context) Any(key string, i any) Context {
 	return c.Interface(key, i)
 }
 

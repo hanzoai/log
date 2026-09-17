@@ -28,7 +28,7 @@ type encoder interface {
 	AppendInt32(dst []byte, val int32) []byte
 	AppendInt64(dst []byte, val int64) []byte
 	AppendInt8(dst []byte, val int8) []byte
-	AppendInterface(dst []byte, i interface{}) []byte
+	AppendInterface(dst []byte, i any) []byte
 	AppendInts(dst []byte, vals []int) []byte
 	AppendInts16(dst []byte, vals []int16) []byte
 	AppendInts32(dst []byte, vals []int32) []byte

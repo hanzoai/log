@@ -84,16 +84,16 @@ var (
 	ErrorStackFieldName = "stack"
 
 	// ErrorStackMarshaler extract the stack from err if any.
-	ErrorStackMarshaler func(err error) interface{}
+	ErrorStackMarshaler func(err error) any
 
 	// ErrorMarshalFunc allows customization of global error marshaling
-	ErrorMarshalFunc = func(err error) interface{} {
+	ErrorMarshalFunc = func(err error) any {
 		return err
 	}
 
 	// InterfaceMarshalFunc allows customization of interface marshaling.
 	// Default: "encoding/json.Marshal" with disabled HTML escaping
-	InterfaceMarshalFunc = func(v interface{}) ([]byte, error) {
+	InterfaceMarshalFunc = func(v any) ([]byte, error) {
 		var buf bytes.Buffer
 		encoder := json.NewEncoder(&buf)
 		encoder.SetEscapeHTML(false)

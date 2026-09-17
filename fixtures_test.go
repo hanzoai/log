@@ -154,6 +154,6 @@ func makeFieldFixtures() *fieldFixtures {
 		Stringers:  stringers,
 		Strings:    strings,
 		Times:      times,
-		Type:       reflect.TypeOf(12345),
+		Type:       reflect.TypeFor[int](),
 	}
 }

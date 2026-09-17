@@ -10,24 +10,24 @@ import (
 	"unsafe"
 )
 
-func isNilValue(i interface{}) bool {
+func isNilValue(i any) bool {
 	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
 }
 
-func appendFields(dst []byte, fields interface{}, stack bool, ctx context.Context, hooks []Hook) []byte {
+func appendFields(dst []byte, fields any, stack bool, ctx context.Context, hooks []Hook) []byte {
 	switch fields := fields.(type) {
-	case []interface{}:
+	case []any:
 		if n := len(fields); n&0x1 == 1 { // odd number
 			fields = fields[:n-1]
 		}
 		dst = appendFieldList(dst, fields, stack, ctx, hooks)
-	case map[string]interface{}:
+	case map[string]any:
 		keys := make([]string, 0, len(fields))
 		for key := range fields {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
-		kv := make([]interface{}, 2)
+		kv := make([]any, 2)
 		for _, key := range keys {
 			kv[0], kv[1] = key, fields[key]
 			dst = appendFieldList(dst, kv, stack, ctx, hooks)
@@ -45,7 +45,7 @@ func appendObject(dst []byte, obj LogObjectMarshaler, stack bool, ctx context.Co
 	return dst
 }
 
-func appendFieldList(dst []byte, kvList []interface{}, stack bool, ctx context.Context, hooks []Hook) []byte {
+func appendFieldList(dst []byte, kvList []any, stack bool, ctx context.Context, hooks []Hook) []byte {
 	for i, n := 0, len(kvList); i < n; i += 2 {
 		key, val := kvList[i], kvList[i+1]
 		if key, ok := key.(string); ok {

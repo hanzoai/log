@@ -275,37 +275,37 @@ func (f *factory) Close() {
 // NoLog is a no-op logger for use in tests or when logging is disabled.
 type NoLog struct{}
 
-func (NoLog) Output(io.Writer) Logger           { return Noop() }
-func (NoLog) With() Context                     { return Context{} }
-func (NoLog) Level(Level) Logger                { return Noop() }
-func (NoLog) GetLevel() Level                   { return Disabled }
-func (NoLog) New(...interface{}) Logger         { return Noop() }
-func (NoLog) Sample(Sampler) Logger             { return Noop() }
-func (NoLog) Hook(...Hook) Logger               { return Noop() }
-func (NoLog) Trace(string, ...interface{})      {}
-func (NoLog) Debug(string, ...interface{})      {}
-func (NoLog) Info(string, ...interface{})       {}
-func (NoLog) Warn(string, ...interface{})       {}
-func (NoLog) Error(string, ...interface{})      {}
-func (NoLog) Fatal(string, ...interface{})      {}
-func (NoLog) Panic(string, ...interface{})      {}
-func (NoLog) Crit(string, ...interface{})       {}
-func (NoLog) Verbo(string, ...interface{})      {}
-func (NoLog) Log(Level, string, ...interface{}) {}
-func (NoLog) TraceEvent() *Event                { return nil }
-func (NoLog) DebugEvent() *Event                { return nil }
-func (NoLog) InfoEvent() *Event                 { return nil }
-func (NoLog) WarnEvent() *Event                 { return nil }
-func (NoLog) ErrorEvent() *Event                { return nil }
-func (NoLog) FatalEvent() *Event                { return nil }
-func (NoLog) PanicEvent() *Event                { return nil }
-func (NoLog) Err(error) *Event                  { return nil }
-func (NoLog) WithLevel(Level) *Event            { return nil }
-func (NoLog) LogEvent() *Event                  { return nil }
-func (NoLog) Print(...interface{})              {}
-func (NoLog) Printf(string, ...interface{})     {}
-func (NoLog) Write(p []byte) (int, error)       { return len(p), nil }
-func (NoLog) SetLogLevel(string) error          { return nil }
+func (NoLog) Output(io.Writer) Logger     { return Noop() }
+func (NoLog) With() Context               { return Context{} }
+func (NoLog) Level(Level) Logger          { return Noop() }
+func (NoLog) GetLevel() Level             { return Disabled }
+func (NoLog) New(...any) Logger           { return Noop() }
+func (NoLog) Sample(Sampler) Logger       { return Noop() }
+func (NoLog) Hook(...Hook) Logger         { return Noop() }
+func (NoLog) Trace(string, ...any)        {}
+func (NoLog) Debug(string, ...any)        {}
+func (NoLog) Info(string, ...any)         {}
+func (NoLog) Warn(string, ...any)         {}
+func (NoLog) Error(string, ...any)        {}
+func (NoLog) Fatal(string, ...any)        {}
+func (NoLog) Panic(string, ...any)        {}
+func (NoLog) Crit(string, ...any)         {}
+func (NoLog) Verbo(string, ...any)        {}
+func (NoLog) Log(Level, string, ...any)   {}
+func (NoLog) TraceEvent() *Event          { return nil }
+func (NoLog) DebugEvent() *Event          { return nil }
+func (NoLog) InfoEvent() *Event           { return nil }
+func (NoLog) WarnEvent() *Event           { return nil }
+func (NoLog) ErrorEvent() *Event          { return nil }
+func (NoLog) FatalEvent() *Event          { return nil }
+func (NoLog) PanicEvent() *Event          { return nil }
+func (NoLog) Err(error) *Event            { return nil }
+func (NoLog) WithLevel(Level) *Event      { return nil }
+func (NoLog) LogEvent() *Event            { return nil }
+func (NoLog) Print(...any)                {}
+func (NoLog) Printf(string, ...any)       {}
+func (NoLog) Write(p []byte) (int, error) { return len(p), nil }
+func (NoLog) SetLogLevel(string) error    { return nil }
 func (NoLog) RecoverAndPanic(fn func()) {
 	defer func() {
 		if r := recover(); r != nil {

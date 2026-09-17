@@ -11,7 +11,7 @@ import (
 )
 
 var eventPool = &sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &Event{
 			buf: make([]byte, 0, 500),
 		}
@@ -125,7 +125,7 @@ func (e *Event) Send() {
 //
 // NOTICE: once this method is called, the *Event should be disposed.
 // Calling Msgf twice can have unexpected result.
-func (e *Event) Msgf(format string, v ...interface{}) {
+func (e *Event) Msgf(format string, v ...any) {
 	if e == nil {
 		return
 	}
@@ -161,7 +161,7 @@ func (e *Event) msg(msg string) {
 // Fields is a helper function to use a map or slice to set fields using type assertion.
 // Only map[string]interface{} and []interface{} are accepted. []interface{} must
 // alternate string keys and arbitrary values, and extraneous ones are ignored.
-func (e *Event) Fields(fields interface{}) *Event {
+func (e *Event) Fields(fields any) *Event {
 	if e == nil {
 		return e
 	}
@@ -776,12 +776,12 @@ func (e *Event) TimeDiff(key string, t time.Time, start time.Time) *Event {
 }
 
 // Any is a wrapper around Event.Interface.
-func (e *Event) Any(key string, i interface{}) *Event {
+func (e *Event) Any(key string, i any) *Event {
 	return e.Interface(key, i)
 }
 
 // Interface adds the field key with i marshaled using reflection.
-func (e *Event) Interface(key string, i interface{}) *Event {
+func (e *Event) Interface(key string, i any) *Event {
 	if e == nil {
 		return e
 	}
@@ -793,7 +793,7 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 }
 
 // Type adds the field key with val's type using reflection.
-func (e *Event) Type(key string, val interface{}) *Event {
+func (e *Event) Type(key string, val any) *Event {
 	if e == nil {
 		return e
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 var arrayPool = &sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &Array{
 			buf: make([]byte, 0, 500),
 		}
@@ -232,7 +232,7 @@ func (a *Array) Dur(d time.Duration) *Array {
 }
 
 // Interface appends i marshaled using reflection.
-func (a *Array) Interface(i interface{}) *Array {
+func (a *Array) Interface(i any) *Array {
 	if obj, ok := i.(LogObjectMarshaler); ok {
 		return a.Object(obj)
 	}
@@ -266,7 +266,7 @@ func (a *Array) Dict(dict *Event) *Array {
 }
 
 // Type adds the val's type using reflection to the array.
-func (a *Array) Type(val interface{}) *Array {
+func (a *Array) Type(val any) *Array {
 	a.buf = enc.AppendType(enc.AppendArrayDelim(a.buf), val)
 	return a
 }

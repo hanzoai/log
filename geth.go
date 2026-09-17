@@ -23,7 +23,7 @@ func FormatLogfmtUint64(n uint64) string {
 // This provides compatibility with go-ethereum's logging patterns.
 type Field struct {
 	Key   string
-	Value interface{}
+	Value any
 }
 
 // Field constructors for geth-style logging
@@ -46,7 +46,7 @@ func Duration(key string, val time.Duration) Field { return Field{Key: key, Valu
 func Time(key string, val time.Time) Field         { return Field{Key: key, Value: val} }
 func Err(err error) Field                          { return Field{Key: ErrorFieldName, Value: err} }
 func NamedErr(key string, err error) Field         { return Field{Key: key, Value: err} }
-func Any(key string, val interface{}) Field        { return Field{Key: key, Value: val} }
+func Any(key string, val any) Field                { return Field{Key: key, Value: val} }
 func Binary(key string, val []byte) Field          { return Field{Key: key, Value: val} }
 func ByteString(key string, val []byte) Field      { return Field{Key: key, Value: string(val)} }
 
@@ -95,7 +95,7 @@ func Default() Logger {
 func UserString(key, val string) Field { return String(key, val) }
 
 // Reflect returns a Field that uses reflection for complex types.
-func Reflect(key string, val interface{}) Field { return Any(key, val) }
+func Reflect(key string, val any) Field { return Any(key, val) }
 
 // applyField applies a single Field to an Event.
 func applyField(e *Event, f Field) *Event {
@@ -138,7 +138,7 @@ func applyField(e *Event, f Field) *Event {
 // applyContext applies geth-style key-value pairs to an Event.
 // Accepts alternating key-value pairs: key1, val1, key2, val2, ...
 // Also supports Field values directly (log.UserString, log.Reflect, etc.)
-func applyContext(e *Event, ctx []interface{}) *Event {
+func applyContext(e *Event, ctx []any) *Event {
 	if e == nil {
 		return nil
 	}
@@ -218,42 +218,42 @@ func applyContext(e *Event, ctx []interface{}) *Event {
 // These accept alternating key-value pairs: msg, key1, val1, key2, val2, ...
 
 // Trace logs at trace level with geth-style context
-func Trace(msg string, ctx ...interface{}) {
+func Trace(msg string, ctx ...any) {
 	applyContext(defaultLogger.TraceEvent(), ctx).Msg(msg)
 }
 
 // Debug logs at debug level with geth-style context
-func Debug(msg string, ctx ...interface{}) {
+func Debug(msg string, ctx ...any) {
 	applyContext(defaultLogger.DebugEvent(), ctx).Msg(msg)
 }
 
 // Info logs at info level with geth-style context
-func Info(msg string, ctx ...interface{}) {
+func Info(msg string, ctx ...any) {
 	applyContext(defaultLogger.InfoEvent(), ctx).Msg(msg)
 }
 
 // Warn logs at warn level with geth-style context
-func Warn(msg string, ctx ...interface{}) {
+func Warn(msg string, ctx ...any) {
 	applyContext(defaultLogger.WarnEvent(), ctx).Msg(msg)
 }
 
 // Error logs at error level with geth-style context
-func Error(msg string, ctx ...interface{}) {
+func Error(msg string, ctx ...any) {
 	applyContext(defaultLogger.ErrorEvent(), ctx).Msg(msg)
 }
 
 // Fatal logs at fatal level with geth-style context and exits
-func Fatal(msg string, ctx ...interface{}) {
+func Fatal(msg string, ctx ...any) {
 	applyContext(defaultLogger.FatalEvent(), ctx).Msg(msg)
 }
 
 // Crit is an alias for Fatal (geth compatibility)
-func Crit(msg string, ctx ...interface{}) {
+func Crit(msg string, ctx ...any) {
 	Fatal(msg, ctx...)
 }
 
 // Log logs at the specified level with geth-style context
-func Log(level Level, msg string, ctx ...interface{}) {
+func Log(level Level, msg string, ctx ...any) {
 	applyContext(defaultLogger.WithLevel(level), ctx).Msg(msg)
 }
 

@@ -136,20 +136,20 @@ func (l Level) MarshalText() ([]byte, error) {
 // satisfy this interface. Use == nil to check for uninitialized loggers.
 type Logger interface {
 	// Geth-style variadic logging methods
-	Trace(msg string, ctx ...interface{})
-	Debug(msg string, ctx ...interface{})
-	Info(msg string, ctx ...interface{})
-	Warn(msg string, ctx ...interface{})
-	Error(msg string, ctx ...interface{})
-	Fatal(msg string, ctx ...interface{})
-	Panic(msg string, ctx ...interface{})
-	Crit(msg string, ctx ...interface{})
-	Verbo(msg string, ctx ...interface{})
-	Log(level Level, msg string, ctx ...interface{})
+	Trace(msg string, ctx ...any)
+	Debug(msg string, ctx ...any)
+	Info(msg string, ctx ...any)
+	Warn(msg string, ctx ...any)
+	Error(msg string, ctx ...any)
+	Fatal(msg string, ctx ...any)
+	Panic(msg string, ctx ...any)
+	Crit(msg string, ctx ...any)
+	Verbo(msg string, ctx ...any)
+	Log(level Level, msg string, ctx ...any)
 
 	// Context/child loggers
 	With() Context
-	New(ctx ...interface{}) Logger
+	New(ctx ...any) Logger
 	Output(w io.Writer) Logger
 
 	// Level control
@@ -172,8 +172,8 @@ type Logger interface {
 	// Utilities
 	Sample(s Sampler) Logger
 	Hook(hooks ...Hook) Logger
-	Print(v ...interface{})
-	Printf(format string, v ...interface{})
+	Print(v ...any)
+	Printf(format string, v ...any)
 	Write(p []byte) (n int, err error)
 
 	// Configuration
@@ -199,7 +199,7 @@ func Noop() Logger {
 
 // New creates a new logger with optional context key-value pairs.
 // Usage: log.New("component", "myapp", "version", "1.0")
-func New(ctx ...interface{}) Logger {
+func New(ctx ...any) Logger {
 	l := newLogger(os.Stderr).With().Timestamp().Logger()
 	if len(ctx) > 0 {
 		return l.With().Fields(ctx).Logger()
@@ -310,7 +310,7 @@ func (l *logger) IsZero() bool {
 }
 
 // New creates a child logger with the given context key-value pairs.
-func (l *logger) New(ctx ...interface{}) Logger {
+func (l *logger) New(ctx ...any) Logger {
 	if len(ctx) > 0 {
 		return l.With().Fields(ctx).Logger()
 	}
@@ -375,37 +375,37 @@ func (l *logger) hook(hooks ...Hook) *logger {
 
 // --- Geth-style variadic logging methods ---
 
-func (l *logger) Trace(msg string, ctx ...interface{}) {
+func (l *logger) Trace(msg string, ctx ...any) {
 	if e := l.newEvent(TraceLevel, nil); e != nil {
 		applyContext(e, ctx).Msg(msg)
 	}
 }
 
-func (l *logger) Debug(msg string, ctx ...interface{}) {
+func (l *logger) Debug(msg string, ctx ...any) {
 	if e := l.newEvent(DebugLevel, nil); e != nil {
 		applyContext(e, ctx).Msg(msg)
 	}
 }
 
-func (l *logger) Info(msg string, ctx ...interface{}) {
+func (l *logger) Info(msg string, ctx ...any) {
 	if e := l.newEvent(InfoLevel, nil); e != nil {
 		applyContext(e, ctx).Msg(msg)
 	}
 }
 
-func (l *logger) Warn(msg string, ctx ...interface{}) {
+func (l *logger) Warn(msg string, ctx ...any) {
 	if e := l.newEvent(WarnLevel, nil); e != nil {
 		applyContext(e, ctx).Msg(msg)
 	}
 }
 
-func (l *logger) Error(msg string, ctx ...interface{}) {
+func (l *logger) Error(msg string, ctx ...any) {
 	if e := l.newEvent(ErrorLevel, nil); e != nil {
 		applyContext(e, ctx).Msg(msg)
 	}
 }
 
-func (l *logger) Fatal(msg string, ctx ...interface{}) {
+func (l *logger) Fatal(msg string, ctx ...any) {
 	if e := l.newEvent(FatalLevel, func(msg string) {
 		if closer, ok := l.w.(io.Closer); ok {
 			closer.Close()
@@ -416,21 +416,21 @@ func (l *logger) Fatal(msg string, ctx ...interface{}) {
 	}
 }
 
-func (l *logger) Panic(msg string, ctx ...interface{}) {
+func (l *logger) Panic(msg string, ctx ...any) {
 	if e := l.newEvent(PanicLevel, func(msg string) { panic(msg) }); e != nil {
 		applyContext(e, ctx).Msg(msg)
 	}
 }
 
-func (l *logger) Crit(msg string, ctx ...interface{}) {
+func (l *logger) Crit(msg string, ctx ...any) {
 	l.Fatal(msg, ctx...)
 }
 
-func (l *logger) Verbo(msg string, ctx ...interface{}) {
+func (l *logger) Verbo(msg string, ctx ...any) {
 	l.Trace(msg, ctx...)
 }
 
-func (l *logger) Log(level Level, msg string, ctx ...interface{}) {
+func (l *logger) Log(level Level, msg string, ctx ...any) {
 	if e := l.newEvent(level, nil); e != nil {
 		applyContext(e, ctx).Msg(msg)
 	}
@@ -507,13 +507,13 @@ func (l *logger) LogEvent() *Event {
 	return l.newEvent(NoLevel, nil)
 }
 
-func (l *logger) Print(v ...interface{}) {
+func (l *logger) Print(v ...any) {
 	if e := l.DebugEvent(); e.Enabled() {
 		e.CallerSkipFrame(1).Msg(fmt.Sprint(v...))
 	}
 }
 
-func (l *logger) Printf(format string, v ...interface{}) {
+func (l *logger) Printf(format string, v ...any) {
 	if e := l.DebugEvent(); e.Enabled() {
 		e.CallerSkipFrame(1).Msg(fmt.Sprintf(format, v...))
 	}
@@ -593,18 +593,18 @@ func (l *logger) should(lvl Level) bool {
 
 type noopLogger struct{}
 
-func (noopLogger) Trace(string, ...interface{})             {}
-func (noopLogger) Debug(string, ...interface{})             {}
-func (noopLogger) Info(string, ...interface{})              {}
-func (noopLogger) Warn(string, ...interface{})              {}
-func (noopLogger) Error(string, ...interface{})             {}
-func (noopLogger) Fatal(string, ...interface{})             {}
-func (noopLogger) Panic(string, ...interface{})             {}
-func (noopLogger) Crit(string, ...interface{})              {}
-func (noopLogger) Verbo(string, ...interface{})             {}
-func (noopLogger) Log(Level, string, ...interface{})        {}
+func (noopLogger) Trace(string, ...any)                     {}
+func (noopLogger) Debug(string, ...any)                     {}
+func (noopLogger) Info(string, ...any)                      {}
+func (noopLogger) Warn(string, ...any)                      {}
+func (noopLogger) Error(string, ...any)                     {}
+func (noopLogger) Fatal(string, ...any)                     {}
+func (noopLogger) Panic(string, ...any)                     {}
+func (noopLogger) Crit(string, ...any)                      {}
+func (noopLogger) Verbo(string, ...any)                     {}
+func (noopLogger) Log(Level, string, ...any)                {}
 func (n noopLogger) With() Context                          { return Context{} }
-func (n noopLogger) New(...interface{}) Logger              { return n }
+func (n noopLogger) New(...any) Logger                      { return n }
 func (n noopLogger) Output(io.Writer) Logger                { return n }
 func (n noopLogger) Level(Level) Logger                     { return n }
 func (noopLogger) GetLevel() Level                          { return Disabled }
@@ -622,8 +622,8 @@ func (noopLogger) PanicEvent() *Event                       { return nil }
 func (noopLogger) Err(error) *Event                         { return nil }
 func (noopLogger) WithLevel(Level) *Event                   { return nil }
 func (noopLogger) LogEvent() *Event                         { return nil }
-func (noopLogger) Print(...interface{})                     {}
-func (noopLogger) Printf(string, ...interface{})            {}
+func (noopLogger) Print(...any)                             {}
+func (noopLogger) Printf(string, ...any)                    {}
 func (noopLogger) Write(p []byte) (int, error)              { return len(p), nil }
 func (noopLogger) SetLogLevel(string) error                 { return nil }
 func (noopLogger) RecoverAndPanic(fn func()) {

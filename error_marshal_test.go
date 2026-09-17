@@ -54,7 +54,7 @@ func TestArrayErrorMarshalFunc(t *testing.T) {
 	}
 	type testCase struct {
 		name    string
-		marshal func(err error) interface{}
+		marshal func(err error) any
 		want    []string
 	}
 	testCases := []testCase{
@@ -65,7 +65,7 @@ func TestArrayErrorMarshalFunc(t *testing.T) {
 		},
 		{
 			name: "string",
-			marshal: func(err error) interface{} {
+			marshal: func(err error) any {
 				if err == nil {
 					return nil
 				}
@@ -75,7 +75,7 @@ func TestArrayErrorMarshalFunc(t *testing.T) {
 		},
 		{
 			name: "loggable",
-			marshal: func(err error) interface{} {
+			marshal: func(err error) any {
 				if err == nil {
 					return nil
 				}
@@ -85,7 +85,7 @@ func TestArrayErrorMarshalFunc(t *testing.T) {
 		},
 		{
 			name: "non-loggable",
-			marshal: func(err error) interface{} {
+			marshal: func(err error) any {
 				if err == nil {
 					return nil
 				}
@@ -95,19 +95,19 @@ func TestArrayErrorMarshalFunc(t *testing.T) {
 		},
 		{
 			name: "interface",
-			marshal: func(err error) interface{} {
+			marshal: func(err error) any {
 				var some interfaceError
 				if err != nil {
 					some.val = err.Error()
 				}
-				var interfaceErr interface{} = some
+				var interfaceErr any = some
 				return interfaceErr
 			},
 			want: []string{`{}`, `{}`, `{}`, `{}`},
 		},
 		{
 			name: "nilError",
-			marshal: func(err error) interface{} {
+			marshal: func(err error) any {
 				var errNil error = nil
 				return errNil
 			},
@@ -115,7 +115,7 @@ func TestArrayErrorMarshalFunc(t *testing.T) {
 		},
 		{
 			name: "wrapped error",
-			marshal: func(err error) interface{} {
+			marshal: func(err error) any {
 				if err == nil {
 					return nil
 				} else if we, ok := err.(wrappedError); ok {
@@ -174,7 +174,7 @@ func TestArrayErrorMarshalFunc(t *testing.T) {
 						wants := `{"err":` + want + `,"message":"msg"}` + "\n"
 						out := &bytes.Buffer{}
 						logger := NewWriter(out)
-						logger.LogEvent().Fields(map[string]interface{}{"err": err}).Msg("msg")
+						logger.LogEvent().Fields(map[string]any{"err": err}).Msg("msg")
 						if got := decodeIfBinaryToString(out.Bytes()); got != wants {
 							t.Errorf("%s %d Event.Fields(%v)\ngot:  %v\nwant: %v", tc.name, i, err, got, wants)
 						}
@@ -213,7 +213,7 @@ func TestArrayErrorMarshalFunc(t *testing.T) {
 					wants := `{"e":` + want + `,"message":"msg"}` + "\n"
 					out := &bytes.Buffer{}
 					logger := NewWriter(out)
-					logger.LogEvent().Fields(map[string]interface{}{"e": errs}).Msg("msg")
+					logger.LogEvent().Fields(map[string]any{"e": errs}).Msg("msg")
 					if got := decodeIfBinaryToString(out.Bytes()); got != wants {
 						t.Errorf("%s Ctx.Errs()\ngot:  %v\nwant: %v", tc.name, got, wants)
 					}
